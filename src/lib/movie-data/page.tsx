@@ -1,6 +1,24 @@
 // lib/movieData.ts
-export const movieDetails = {
-  1: {
+
+export interface Movie {
+  id: number;
+  title: string;
+  genre: string;
+  src: string; 
+  coverSrc: string; 
+  description: string;
+  year: string;
+  director: string;
+  cast: string[];
+  rating: string;
+  duration: string;
+  tags: string[];
+  type: 'movie' | 'tv-show';
+}
+
+
+const rawMovieDataFromJSON = {
+  "movieDetails": {1: {
     id: 1,
     title: "BLACK PANTHER: LONG LIVE THE KING",
     genre: "Action/Sci-Fi",
@@ -420,7 +438,8 @@ export const movieDetails = {
     duration: "4 Seasons",
     tags: ["Anti-Superhero", "Dark Comedy", "Satire"]
   }
-};
+}
+}
 
 export const sampleComments = [
   {
@@ -658,3 +677,37 @@ export const sampleComments = [
     date: "2023-12-01"
   }
 ];
+
+interface RawMovieDetailFromJSON {
+  id: number | string;
+  title: string;
+  genre: string;
+  src: string;
+  coverSrc: string;
+  description: string;
+  year: string;
+  director: string;
+  cast: string[];
+  rating: string;
+  duration: string;
+  tags: string[];
+}
+
+type RawMovieDetailsMap = { [key: string]: RawMovieDetailFromJSON };
+
+const typedMovieDetails = rawMovieDataFromJSON.movieDetails as RawMovieDetailsMap;
+
+export const allMoviesData: Movie[] = Object.values(typedMovieDetails).map(movie => {
+  const numericId = Number(movie.id);
+  return {
+    ...movie,
+    id: numericId,
+    type: numericId >= 1 && numericId <= 18 ? 'movie' : 'tv-show'
+  };
+});
+
+export const getMovieById = (id: number | string): Movie | undefined => {
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  if (isNaN(numericId)) return undefined;
+  return allMoviesData.find(movie => movie.id === numericId);
+};

@@ -54,7 +54,7 @@ export default function HomePage() {
               <h2 className="text-white text-2xl font-bold mb-6">POPULAR</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {popularMovies.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCard key={movie.id} movieId={movie.id} />
                 ))}
               </div>
             </section>
@@ -66,7 +66,7 @@ export default function HomePage() {
               <h2 className="text-white text-2xl font-bold mb-6">TV SHOWS</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {tvShows.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCard key={movie.id} movieId={movie.id} />
                 ))}
               </div>
             </section>

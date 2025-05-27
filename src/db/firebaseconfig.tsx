@@ -5,6 +5,7 @@ import { getAnalytics } from "firebase/analytics";
 const firebaseConfig = {
   apiKey: "AIzaSyA3ov7Z21EZa74p8gbjIibx1UGFhpl6lQ4",
   authDomain: "maegan-website-e0b47.firebaseapp.com",
+  databaseURL: "https://maegan-website-e0b47-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: "maegan-website-e0b47",
   storageBucket: "maegan-website-e0b47.firebasestorage.app",
   messagingSenderId: "911750673992",
