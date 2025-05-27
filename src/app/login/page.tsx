@@ -1,8 +1,12 @@
 // src/app/page.js
+'use client'
 import Image from "next/image";
 import { InteractiveSection } from "./interactive-section";
 
-export default function Home() {
+
+
+export default function Login() {
+  
   return (
     <div style={{
       position: "relative",

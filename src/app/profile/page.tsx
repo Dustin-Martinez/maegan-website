@@ -1,8 +1,82 @@
 'use client';
+import { auth, db } from '@/db/firebase';
+import { User, onAuthStateChanged, updateProfile, updatePassword, AuthError } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FiUser, FiMail, FiLock, FiCheck, FiEdit3 } from 'react-icons/fi';
 
 export default function ProfilePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [name, setName] = useState<string>('');
+  const [loading, setLoading] = useState(true); // New loading state
+  const router = useRouter();
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser(currentUser);
+  
+      // Fetch user data from Firestore
+      const fetchUserName = async () => {
+        const userDocRef = doc(db, "users", currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+  
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          if (userData && userData.name) {
+            setName(userData.name); // Set the name state with the name from Firestore
+          } else {
+            setName(''); // Set to empty string if no name in database
+          }
+        } else {
+          // Document doesn't exist, maybe handle this case (e.g., create a basic document)
+          console.log("No user document found in Firestore for this user.");
+          setName(currentUser.displayName || ''); // Use display name from auth if no document
+        }
+      };
+  
+      // Use onAuthStateChanged to handle authentication state changes
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+          setUser(currentUser);
+          // Fetch user data from Firestore inside the listener
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            if (userData && userData.name) {
+              setName(userData.name); // Set the name state with the name from Firestore
+            } else {
+              setName(''); // Set to empty string if no name in database
+            }
+          } else {
+            console.log("No user document found in Firestore for this user.");
+            // Optionally, create a basic user document here if it doesn't exist
+            // await setDoc(userDocRef, { email: currentUser.email, name: '' });
+            setName(currentUser.displayName || ''); // Fallback to auth display name
+          }
+          setLoading(false); // Set loading to false once user data is fetched
+        } else {
+          setUser(null);
+          setLoading(false); // Set loading to false if no user is found
+          router.push('/login'); // Redirect if no user
+        }
+      });
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    } else {
+      // Handle the case where auth is not yet initialized or other issues
+      setLoading(false);
+      router.push('/login'); // Redirect if auth is not available
+    }
+  }, [router]);
+
+
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -57,7 +131,8 @@ export default function ProfilePage() {
                   <FiUser className="text-gray-400" />
                   <input
                     type="text"
-                    defaultValue="Maegan Manez"
+                    placeholder={name || 'Enter your name'}
+                    value={name}
                     className="bg-transparent text-white w-full focus:outline-none"
                   />
                 </div>
@@ -72,8 +147,9 @@ export default function ProfilePage() {
                   <FiMail className="text-gray-400" />
                   <input
                     type="email"
-                    defaultValue="maegan@example.com"
-                    className="bg-transparent text-white w-full focus:outline-none"
+                    defaultValue={user?.email || ''}
+                    disabled
+                    className="bg-transparent text-white w-full focus:outline-none disabled:opacity-50 cursor-not-allowed"
                   />
                 </div>
               </motion.div>
@@ -131,3 +207,11 @@ export default function ProfilePage() {
     </motion.div>
   );
 }
+
+function setUser(currentUser: User) {
+  throw new Error('Function not implemented.');
+}
+function setName(name: any) {
+  throw new Error('Function not implemented.');
+}
+
