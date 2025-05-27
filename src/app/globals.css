@@ -19,3 +19,14 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.min-w-search{
+  min-width: 50% !important;
+}
+
+.search-icon{
+  display: flex !important;
+  justify-content: end !important;
+  align-items: center !important;
+}
+

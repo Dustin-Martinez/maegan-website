@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { auth } from '@/db/firebase'; 
+import { signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { FiSearch } from 'react-icons/fi';
 
 interface MenuItemProps {
   icon: string;
@@ -29,6 +32,16 @@ const MenuItem = ({ icon, text, onClick }: MenuItemProps) => {
 export const Header = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const [user, setUser] = useState<User | null>(null); // State to track user
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe(); // Cleanup the listener
+  }, []); // Empty dependency array to run only on mount and unmount
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -58,20 +71,33 @@ export const Header = () => {
     };
   }, [isMenuOpen]);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login'); // Redirect to login page after logout
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+    setIsMenuOpen(false); // Close the menu
+  };
+
+
+
   return (
     <>
       {/* Full-width Header */}
-      <header className="fixed top-0 left-0 w-full bg-[#26262F] border-b border-[#333333] p-4 z-50">
-        <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
+      <header className="fixed top-0 left-0 w-full bg-[#26262F] border-b border-[#333333] p-4 px-8 z-50">
+        <div className="flex items-center justify-between w-full mx-auto">
           {/* Left: Logo - MOVIELIST */}
           <h1 className="text-lg font-bold text-blue-500 whitespace-nowrap mr-4">MOVIELIST</h1>
           
           {/* Center: Search Bar - Wider and centered */}
-          <div className="flex-1 max-w-3xl mx-8">
+          <div className="min-w-search flex  mx-8">
             <input
               type="text"
               placeholder="Search movies, TV shows..."
               className="w-full px-4 py-2 rounded-full bg-[#1D1D24] text-white placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              
             />
           </div>
           
@@ -124,36 +150,57 @@ export const Header = () => {
             >
               <div className="p-6 border-b border-[#333333] flex flex-col items-center">
                 <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold mb-4">
-                  U
+                
                 </div>
                 <div className="text-center">
-                  <p className="text-white font-medium text-lg">John Doe</p>
-                  <p className="text-gray-400 text-sm mt-1">john.doe@example.com</p>
+                  {user ? (
+                    <>
+                      <p className="text-white font-medium text-lg">{user.displayName || 'User'}</p>
+                      <p className="text-gray-400 text-sm mt-1">{user.email}</p>
+                    </>
+                  ) : (
+                    <p className="text-gray-400 text-sm mt-1">Not logged in</p>
+                  )}
                 </div>
               </div>
               
               <nav className="p-4">
                 <ul className="space-y-2">
-                  <MenuItem 
-                    icon="🏠" 
-                    text="Home" 
-                    onClick={() => handleNavigation('/')} 
+                <MenuItem
+                    icon="🏠"
+                    text="Home"
+                    onClick={() => handleNavigation('/')}
                   />
-                  <MenuItem 
-                    icon="📚" 
-                    text="Library" 
-                    onClick={() => handleNavigation('/library')}
-                  />
-                  <MenuItem 
-                    icon="👤" 
-                    text="Profile" 
-                    onClick={() => handleNavigation('/profile')} 
-                  />
-                  <MenuItem 
-                    icon="🚪" 
-                    text="Logout" 
-                    onClick={() => handleNavigation('/login')} 
-                  />
+                  {/* Conditionally render Library and Profile based on login status */}
+                  {user && (
+                    <>
+                      <MenuItem
+                        icon="📚"
+                        text="Library"
+                        onClick={() => handleNavigation('/library')}
+                      />
+                      <MenuItem
+                        icon="👤"
+                        text="Profile"
+                        onClick={() => handleNavigation('/profile')}
+                      />
+                    </>
+                  )}
+
+                  {/* Conditionally render Login/Signup or Logout */}
+                  {user ? (
+                    <MenuItem
+                      icon="🚪"
+                      text="Logout"
+                      onClick={handleLogout} // Logout functionality
+                    />
+                  ) : (
+                    <MenuItem
+                      icon="🔑" // Use a key icon for login/signup
+                      text="Login/Signup"
+                      onClick={() => handleNavigation('/login')} // Navigate to login page
+                    />
+                  )}
                 </ul>
               </nav>
             </motion.div>
